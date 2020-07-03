@@ -1,0 +1,17 @@
+{
+  "name": "sg-scroll",
+  "version": "1.0.0",
+  "description": "移动端自定义滚动",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sg-scroll",
+    "移动端滚动",
+    "禁用默认事件",
+    "滚动冒泡"
+  ],
+  "author": "luoguibin",
+  "license": "ISC"
+}
