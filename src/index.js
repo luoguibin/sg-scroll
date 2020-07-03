@@ -131,7 +131,7 @@ const touchEndEvent = function () {
 /**
  * @description 全局初始化自定义滚动事件
  */
-module.exports = function () {
+export default function () {
   if (window._sgIsScrollInit) {
     return
   }

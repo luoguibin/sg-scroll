@@ -1,5 +1,5 @@
-const sgScroll = require('./src/index')
+import sgScroll from './src/index'
 
-module.exports = {
-    sgScrollInit: sgScroll
+export default {
+  sgScrollInit: sgScroll
 }
