@@ -1,6 +1,6 @@
 {
   "name": "sg-scroll",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "移动端自定义滚动",
   "main": "index.js",
   "scripts": {
@@ -13,5 +13,9 @@
     "滚动冒泡"
   ],
   "author": "luoguibin",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:luoguibin/sg-scroll.git"
+  }
 }
