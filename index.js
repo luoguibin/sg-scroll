@@ -1,4 +1,4 @@
-import sgScroll from './src/index'
+const sgScroll = require('./src/index')
 
 module.exports = {
     sgScrollInit: sgScroll
