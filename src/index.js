@@ -70,6 +70,8 @@ const initScroll = function (el) {
   }
 }
 
+const rootEl = document.body
+
 /**
  * 触摸开始事件
  * @param {TouchEvent} e
@@ -81,7 +83,7 @@ const touchStartEvent = function (e) {
     return
   }
   scrollEl.sgStopAnimeScroll()
-  window.addEventListener('touchmove', touchMoveEvent)
+  rootEl.addEventListener('touchmove', touchMoveEvent)
 
   this._sgPreviousTouch = e.touches[0]
   this._sgScrollEl = scrollEl
@@ -92,12 +94,17 @@ const touchStartEvent = function (e) {
  * @param {TouchEvent} e
  */
 const touchMoveEvent = function (e) {
+  const scrollEl = this._sgScrollEl
+  if (!scrollEl) {
+    return
+  }
+
   const touch = e.touches[0]
   const valueY = touch.clientY - this._sgPreviousTouch.clientY
   touch.valueY = valueY
   this._sgPreviousTouch = touch
 
-  const scrollEl = this._sgScrollEl
+
   scrollEl.scrollTop -= valueY
   if (valueY > 0) {
     // 向下拖动
@@ -123,29 +130,33 @@ const touchMoveEvent = function (e) {
  * 触摸结束事件
  */
 const touchEndEvent = function () {
-  const scrollEl = this._sgScrollEl
-  scrollEl.sgStartAnimeScroll(this._sgPreviousTouch.valueY)
-  window.removeEventListener('touchmove', touchMoveEvent)
+  if (!this._sgScrollEl) {
+    return
+  }
+  this._sgScrollEl.sgStartAnimeScroll(this._sgPreviousTouch.valueY)
+  this._sgScrollEl = null
+  rootEl.removeEventListener('touchmove', touchMoveEvent)
 }
 
 /**
  * @description 全局初始化自定义滚动事件
  */
 export default function () {
-  if (window._sgIsScrollInit) {
+  if (rootEl._sgIsScrollInit) {
     return
   }
-  window._sgIsScrollInit = true
+  rootEl._sgIsScrollInit = true
   // 阻止浏览器所有默认操作
-  window.addEventListener(
+  rootEl.addEventListener(
     'touchmove',
-    function () {
+    function (e) {
+      e.preventDefault()
       return false
     },
-    { passive: true }
+    { passive: false }
   )
 
   // 监听滚动的元素
-  window.addEventListener('touchstart', touchStartEvent)
-  window.addEventListener('touchend', touchEndEvent)
+  rootEl.addEventListener('touchstart', touchStartEvent)
+  rootEl.addEventListener('touchend', touchEndEvent)
 }
