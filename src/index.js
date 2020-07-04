@@ -1,10 +1,21 @@
 /**
+ * 类型值递增，stop表示禁止滚动冒泡，比常规值大1，用于优化计算
+ */
+const SG_SCROLL_TYPE = {
+  vertical: 1,
+  vertical_stop: 2,
+  horizontal: 3,
+  horizontal_stop: 4,
+  normal: 5 // 没有冒泡
+}
+
+/**
  * 获取最近的滚动元素
  * @param {HTMLElement} el
  */
 const getScrollElement = function (el) {
   while (el) {
-    if (el.getAttribute('item-type') === 'scroll') {
+    if (el.hasAttribute('sg-scroll')) {
       break
     }
     el = el.parentElement
@@ -15,9 +26,27 @@ const getScrollElement = function (el) {
 }
 
 /**
+ * 重置元素的滚动类型
+ * @param {HTMLElement} el
+ */
+const resetScrollType = function (el) {
+  const typeKey = el.getAttribute('sg-scroll') || 'vertical'
+  const type = SG_SCROLL_TYPE[typeKey] || SG_SCROLL_TYPE.vertical
+  el._sgScrollType = type
+  if (type % 2 === 0) {
+    el._sgScrollStop = true
+    // 归并到常规值
+    el._sgScrollType--
+  } else {
+    el._sgScrollStop = false
+  }
+}
+
+/**
  * 初始化滚动元素
  */
 const initScroll = function (el) {
+  resetScrollType(el)
   if (el._sgIsScrollInit) {
     return
   }
@@ -36,9 +65,26 @@ const initScroll = function (el) {
   /**
    * @description 开始滚动动画
    */
-  el.sgStartAnimeScroll = function (valueY) {
-    this._sgAnimeUnit = valueY // > 0 ? Math.abs(valueY) : -Math.abs(valueY)
-    this._sgAnimeCount = Math.ceil(Math.abs(valueY) / 1)
+  el.sgStartAnimeScroll = function (valueX, valueY) {
+    window.currentSgcrollEl = this
+    this._sgAnimeUnit = { valueX, valueY }
+
+    const xCount = Math.ceil(Math.abs(valueX) / 1)
+    const yCount = Math.ceil(Math.abs(valueY) / 1)
+    switch (this._sgScrollType) {
+      case SG_SCROLL_TYPE.vertical:
+        this._sgAnimeCount = yCount
+        break;
+      case SG_SCROLL_TYPE.horizontal:
+        this._sgAnimeCount = xCount
+        break
+        case SG_SCROLL_TYPE.normal:
+          this._sgAnimeCount = Math.max(xCount, yCount)
+          break
+      default:
+        break;
+    }
+
     this._sgAnimeIndex = 0
     this.sgAnimeLoopStep()
   }
@@ -53,7 +99,21 @@ const initScroll = function (el) {
       const ratio = Math.sin(
         ((1 - this._sgAnimeIndex / this._sgAnimeCount) * Math.PI) / 2
       )
-      this.scrollTop -= this._sgAnimeUnit * ratio
+      const { valueX, valueY } = this._sgAnimeUnit
+      switch (this._sgScrollType) {
+        case SG_SCROLL_TYPE.vertical:
+          this.scrollTop -= valueY * ratio
+          break;
+        case SG_SCROLL_TYPE.horizontal:
+          this.scrollLeft -= valueX * ratio
+          break
+        case SG_SCROLL_TYPE.normal:
+          this.scrollLeft -= valueX * ratio
+          this.scrollTop -= valueY * ratio
+          break
+        default:
+          break;
+      }
       this._sgScrollTimer = requestAnimationFrame(() => {
         this.sgAnimeLoopStep()
       })
@@ -66,6 +126,9 @@ const initScroll = function (el) {
    * 获取父滚动元素
    */
   el.sgGetParentScrollEl = function () {
+    if (this._sgScrollStop) {
+      return null
+    }
     return getScrollElement(this.parentElement)
   }
 }
@@ -94,35 +157,69 @@ const touchStartEvent = function (e) {
  * @param {TouchEvent} e
  */
 const touchMoveEvent = function (e) {
-  const scrollEl = this._sgScrollEl
+  let scrollEl = this._sgScrollEl
   if (!scrollEl) {
     return
   }
 
   const touch = e.touches[0]
+  const valueX = touch.clientX - this._sgPreviousTouch.clientX
   const valueY = touch.clientY - this._sgPreviousTouch.clientY
+  touch.valueX = valueX
   touch.valueY = valueY
   this._sgPreviousTouch = touch
 
-
-  scrollEl.scrollTop -= valueY
-  if (valueY > 0) {
-    // 向下拖动
-    if (scrollEl.scrollTop === 0) {
-      const parentScrollEl = scrollEl.sgGetParentScrollEl()
-      if (parentScrollEl) {
-        this._sgScrollEl = parentScrollEl
+  switch (scrollEl._sgScrollType) {
+    case SG_SCROLL_TYPE.vertical:
+      if (valueY > 0) {
+        // 向下拖动
+        if (scrollEl.scrollTop === 0) {
+          const parentScrollEl = scrollEl.sgGetParentScrollEl()
+          if (parentScrollEl) {
+            this._sgScrollEl = parentScrollEl
+            scrollEl = parentScrollEl
+          }
+        }
+      } else {
+        // 向上拖动
+        const height = Math.round(scrollEl.scrollTop + scrollEl.clientHeight)
+        if (height >= scrollEl.scrollHeight) {
+          const parentScrollEl = scrollEl.sgGetParentScrollEl()
+          if (parentScrollEl) {
+            this._sgScrollEl = parentScrollEl
+            scrollEl = parentScrollEl
+          }
+        }
       }
-    }
-  } else {
-    // 向上拖动
-    const height = Math.round(scrollEl.scrollTop + scrollEl.clientHeight)
-    if (height >= scrollEl.scrollHeight) {
-      const parentScrollEl = scrollEl.sgGetParentScrollEl()
-      if (parentScrollEl) {
-        this._sgScrollEl = parentScrollEl
+      scrollEl.scrollTop -= valueY
+      break;
+    case SG_SCROLL_TYPE.horizontal:
+      if (valueX > 0) {
+        // 向右拖动
+        if (scrollEl.scrollLeft === 0) {
+          const parentScrollEl = scrollEl.sgGetParentScrollEl()
+          if (parentScrollEl) {
+            this._sgScrollEl = parentScrollEl
+          }
+        }
+      } else {
+        // 向左拖动
+        const width = Math.round(scrollEl.scrollLeft + scrollEl.clientWidth)
+        if (width >= scrollEl.scrollWidth) {
+          const parentScrollEl = scrollEl.sgGetParentScrollEl()
+          if (parentScrollEl) {
+            this._sgScrollEl = parentScrollEl
+          }
+        }
       }
-    }
+      scrollEl.scrollLeft -= valueX
+      break;
+    case SG_SCROLL_TYPE.normal:
+      scrollEl.scrollTop -= valueY
+      scrollEl.scrollLeft -= valueX
+      break;
+    default:
+      break;
   }
 }
 
@@ -133,7 +230,8 @@ const touchEndEvent = function () {
   if (!this._sgScrollEl) {
     return
   }
-  this._sgScrollEl.sgStartAnimeScroll(this._sgPreviousTouch.valueY)
+  const { valueX, valueY } = this._sgPreviousTouch
+  this._sgScrollEl.sgStartAnimeScroll(valueX, valueY)
   this._sgScrollEl = null
   rootEl.removeEventListener('touchmove', touchMoveEvent)
 }
