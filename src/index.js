@@ -2,11 +2,16 @@
  * 类型值递增，stop表示禁止滚动冒泡，比常规值大1，用于优化计算
  */
 const SG_SCROLL_TYPE = {
-  vertical: 1,
-  vertical_stop: 2,
-  horizontal: 3,
-  horizontal_stop: 4,
-  normal: 5 // 没有冒泡
+  // 纵向滚动
+  vertical: 1000,
+  vertical_stop: 1001,
+  vertical_base: 1002,
+  // 横向滚动
+  horizontal: 2000,
+  horizontal_stop: 2001,
+  horizontal_base: 2002,
+  // 双向滚动
+  normal: 3000
 }
 
 /**
@@ -33,13 +38,15 @@ const resetScrollType = function (el) {
   const typeKey = el.getAttribute('sg-scroll') || 'vertical'
   const type = SG_SCROLL_TYPE[typeKey] || SG_SCROLL_TYPE.vertical
   el._sgScrollType = type
-  if (type % 2 === 0) {
-    el._sgScrollStop = true
+
+  const suffixNum = type % SG_SCROLL_TYPE.vertical
+  el._sgIsScrollStop = suffixNum === 1
+  el._sgIsScrollBase = suffixNum === 2
+  if (el._sgIsScrollStop) {
     // 归并到常规值
-    el._sgScrollType--
-  } else {
-    el._sgScrollStop = false
+    el._sgScrollType -= suffixNum
   }
+
 }
 
 /**
@@ -66,7 +73,6 @@ const initScroll = function (el) {
    * @description 开始滚动动画
    */
   el.sgStartAnimeScroll = function (valueX, valueY) {
-    window.currentSgcrollEl = this
     this._sgAnimeUnit = { valueX, valueY }
 
     const xCount = Math.ceil(Math.abs(valueX) / 1)
@@ -78,9 +84,9 @@ const initScroll = function (el) {
       case SG_SCROLL_TYPE.horizontal:
         this._sgAnimeCount = xCount
         break
-        case SG_SCROLL_TYPE.normal:
-          this._sgAnimeCount = Math.max(xCount, yCount)
-          break
+      case SG_SCROLL_TYPE.normal:
+        this._sgAnimeCount = Math.max(xCount, yCount)
+        break
       default:
         break;
     }
@@ -126,7 +132,7 @@ const initScroll = function (el) {
    * 获取父滚动元素
    */
   el.sgGetParentScrollEl = function () {
-    if (this._sgScrollStop) {
+    if (this._sgIsScrollStop) {
       return null
     }
     return getScrollElement(this.parentElement)
@@ -168,6 +174,43 @@ const touchMoveEvent = function (e) {
   touch.valueX = valueX
   touch.valueY = valueY
   this._sgPreviousTouch = touch
+
+  if (scrollEl._sgIsScrollBase) {
+    // 检测手势方向
+    const isVertical = Math.abs(valueY) > Math.abs(valueX)
+    switch (scrollEl._sgScrollType) {
+      case SG_SCROLL_TYPE.vertical_base:
+        if (isVertical) {
+          scrollEl._sgScrollType = SG_SCROLL_TYPE.vertical
+          scrollEl._sgIsScrollStop = true
+        } else {
+          const parentScrollEl = scrollEl.sgGetParentScrollEl()
+          if (parentScrollEl) {
+            this._sgScrollEl = parentScrollEl
+            scrollEl = parentScrollEl
+            scrollEl._sgScrollType = SG_SCROLL_TYPE.horizontal
+          }
+        }
+        scrollEl._sgIsScrollBase = false
+        break;
+      case SG_SCROLL_TYPE.horizontal_base:
+        if (!isVertical) {
+          scrollEl._sgScrollType = SG_SCROLL_TYPE.horizontal
+          scrollEl._sgIsScrollStop = true
+        } else {
+          const parentScrollEl = scrollEl.sgGetParentScrollEl()
+          if (parentScrollEl) {
+            this._sgScrollEl = parentScrollEl
+            scrollEl = parentScrollEl
+            scrollEl._sgScrollType = SG_SCROLL_TYPE.vertical
+          }
+        }
+        scrollEl._sgIsScrollBase = false
+        break;
+      default:
+        break;
+    }
+  }
 
   switch (scrollEl._sgScrollType) {
     case SG_SCROLL_TYPE.vertical:
@@ -221,6 +264,11 @@ const touchMoveEvent = function (e) {
     default:
       break;
   }
+
+  const event = document.createEvent('Event');
+  // 定义事件名称myEvent
+  event.initEvent('sgScroll', true, true);
+  scrollEl.dispatchEvent(event)
 }
 
 /**
