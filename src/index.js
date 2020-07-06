@@ -1,5 +1,5 @@
 import { SG_SCROLL_TYPE } from './const'
-import { isScrollTop, isScrollRight, isScrollBottom, isScrollLeft, isScrollCorner } from './util'
+import { isScrollTop, isScrollRight, isScrollBottom, isScrollLeft } from './util'
 
 /**
  * 获取最近的滚动元素
@@ -22,19 +22,16 @@ const getScrollElement = function (el) {
  * @param {HTMLElement} el
  */
 const resetScrollType = function (el) {
-  const typeKey = el.getAttribute('sg-scroll') || 'vertical'
-  const type = SG_SCROLL_TYPE[typeKey] || SG_SCROLL_TYPE.vertical
+  const type = SG_SCROLL_TYPE[el.getAttribute('sg-scroll')] || SG_SCROLL_TYPE.vertical
   el._sgScrollType = type
 
   const suffixNum = type % SG_SCROLL_TYPE.vertical
   el._sgIsScrollStop = suffixNum === 1
   el._sgIsScrollBase = suffixNum === 2
+  el._sgIsScrollChange = !el._sgIsScrollBase // 只对base有效
+
   if (el._sgIsScrollStop) {
-    // 归并到常规值
-    el._sgScrollType -= suffixNum
-  }
-  if (el._sgIsScrollBase) {
-    el._sgIsScrollChange = false
+    el._sgScrollType -= suffixNum // 归并到常规值
   }
 }
 
@@ -164,94 +161,218 @@ const touchMoveEvent = function (e) {
   touch.valueY = valueY
   this._sgPreviousTouch = touch
 
-  if (scrollEl._sgIsScrollBase && !scrollEl._sgIsScrollChange) {
-    // 检测手势方向
-    const isVertical = Math.abs(valueY) > Math.abs(valueX)
-    switch (scrollEl._sgScrollType) {
-      case SG_SCROLL_TYPE.vertical_base:
-        if (isVertical) {
-          scrollEl._sgScrollType = SG_SCROLL_TYPE.vertical
+  // 循环遍历找到最近的可进行滚动的元素，包括自身
+  let loopCount = 1
+  let tempScrollEl = scrollEl
+  while (loopCount && loopCount < 10) {
+    // console.log("loopCount=" + loopCount)
+    // console.log('1', scrollEl, scrollEl._sgScrollType, scrollEl._sgIsScrollBase, scrollEl._sgIsScrollChange)
+    
+    // base类型判断
+    if (scrollEl._sgIsScrollBase && !scrollEl._sgIsScrollChange) {
+      // 检测手势方向
+      const isVertical = Math.abs(valueY) > Math.abs(valueX)
+      switch (scrollEl._sgScrollType) {
+        case SG_SCROLL_TYPE.vertical_base:
+          if (isVertical) {
+            scrollEl._sgIsScrollChange = true
+            scrollEl._sgScrollType = SG_SCROLL_TYPE.vertical
+          } else {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              continue
+            } else {
+              scrollEl._sgIsScrollChange = true
+            }
+          }
+          break;
+        case SG_SCROLL_TYPE.horizontal_base:
+          if (!isVertical) {
+            scrollEl._sgIsScrollChange = true
+            scrollEl._sgScrollType = SG_SCROLL_TYPE.horizontal
+          } else {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              continue
+            } else {
+              scrollEl._sgIsScrollChange = true
+            }
+          }
+          break;
+        case SG_SCROLL_TYPE.normal_base:
           scrollEl._sgIsScrollChange = true
+          if (isVertical) {
+            scrollEl._sgScrollType = SG_SCROLL_TYPE.vertical
+          } else {
+            scrollEl._sgScrollType = SG_SCROLL_TYPE.horizontal
+          }
+          break
+        default:
+          scrollEl._sgIsScrollChange = true
+          scrollEl._sgScrollType = SG_SCROLL_TYPE.vertical
+          break;
+      }
+    }
+
+    // console.log('2', scrollEl, scrollEl._sgScrollType, scrollEl._sgIsScrollBase, scrollEl._sgIsScrollChange)
+    // 基础类型判断
+    switch (scrollEl._sgScrollType) {
+      case SG_SCROLL_TYPE.vertical:
+        if (valueY > 0) {
+          // 向下拖动
+          if (isScrollTop(scrollEl)) {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              loopCount++
+            } else {
+              loopCount = 0
+            }
+          } else {
+            loopCount = 0
+          }
         } else {
-          const parentScrollEl = scrollEl.sgGetParentScrollEl()
-          if (parentScrollEl) {
-            this._sgScrollEl = parentScrollEl
-            scrollEl = parentScrollEl
+          // 向上拖动
+          if (isScrollBottom(scrollEl)) {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              loopCount++
+            } else {
+              loopCount = 0
+            }
+          } else {
+            loopCount = 0
           }
         }
         break;
-      case SG_SCROLL_TYPE.horizontal_base:
-        if (!isVertical) {
-          scrollEl._sgScrollType = SG_SCROLL_TYPE.horizontal
-          scrollEl._sgIsScrollChange = true
+      case SG_SCROLL_TYPE.horizontal:
+        if (valueX > 0) {
+          // 向右拖动
+          if (isScrollLeft(scrollEl)) {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              loopCount++
+            } else {
+              loopCount = 0
+            }
+          } else {
+            loopCount = 0
+          }
         } else {
-          const parentScrollEl = scrollEl.sgGetParentScrollEl()
-          if (parentScrollEl) {
-            this._sgScrollEl = parentScrollEl
-            scrollEl = parentScrollEl
+          // 向左拖动
+          if (isScrollRight(scrollEl)) {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              loopCount++
+            } else {
+              loopCount = 0
+            }
+          } else {
+            loopCount = 0
           }
         }
-
+        break;
+      case SG_SCROLL_TYPE.normal:
+        if (valueX > 0 && valueY > 0) {
+          // 左上滚动
+          if (isScrollTop(scrollEl) && isScrollLeft(scrollEl)) {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              loopCount++
+            } else {
+              loopCount = 0
+            }
+          } else {
+            loopCount = 0
+          }
+        } else if (valueX > 0 && valueY < 0) {
+          // 左下滚动
+          if (isScrollBottom(scrollEl) && isScrollLeft(scrollEl)) {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              loopCount++
+            } else {
+              loopCount = 0
+            }
+          } else {
+            loopCount = 0
+          }
+        } else if (valueX < 0 && valueY > 0) {
+          // 右上滚动
+          if (isScrollTop(scrollEl) && isScrollRight(scrollEl)) {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              loopCount++
+            } else {
+              loopCount = 0
+            }
+          } else {
+            loopCount = 0
+          }
+        } else {
+          // 右下滚动
+          if (isScrollBottom(scrollEl) && isScrollRight(scrollEl)) {
+            const parentScrollEl = scrollEl.sgGetParentScrollEl()
+            if (parentScrollEl) {
+              this._sgScrollEl = parentScrollEl
+              scrollEl = parentScrollEl
+              tempScrollEl = scrollEl
+              loopCount++
+            } else {
+              loopCount = 0
+            }
+          } else {
+            loopCount = 0
+          }
+        }
         break;
       default:
         break;
     }
+
+    // 防止自身循环
+    if (tempScrollEl === scrollEl) {
+      loopCount = 0
+    }
   }
 
+  // 累加滚动值
   switch (scrollEl._sgScrollType) {
     case SG_SCROLL_TYPE.vertical:
-      if (valueY > 0) {
-        // 向下拖动
-        if (isScrollTop(scrollEl)) {
-          const parentScrollEl = scrollEl.sgGetParentScrollEl()
-          if (parentScrollEl) {
-            this._sgScrollEl = parentScrollEl
-            scrollEl = parentScrollEl
-          }
-        }
-      } else {
-        // 向上拖动
-        if (isScrollBottom(scrollEl)) {
-          const parentScrollEl = scrollEl.sgGetParentScrollEl()
-          if (parentScrollEl) {
-            this._sgScrollEl = parentScrollEl
-            scrollEl = parentScrollEl
-          }
-        }
-      }
       scrollEl.scrollTop -= valueY
       break;
     case SG_SCROLL_TYPE.horizontal:
-      if (valueX > 0) {
-        // 向右拖动
-        if (isScrollLeft(scrollEl)) {
-          const parentScrollEl = scrollEl.sgGetParentScrollEl()
-          if (parentScrollEl) {
-            this._sgScrollEl = parentScrollEl
-          }
-        }
-      } else {
-        // 向左拖动
-        if (isScrollRight(scrollEl)) {
-          const parentScrollEl = scrollEl.sgGetParentScrollEl()
-          if (parentScrollEl) {
-            this._sgScrollEl = parentScrollEl
-          }
-        }
-      }
       scrollEl.scrollLeft -= valueX
       break;
     case SG_SCROLL_TYPE.normal:
       scrollEl.scrollTop -= valueY
       scrollEl.scrollLeft -= valueX
-      
-      if (isScrollCorner(scrollEl)) {
-        const parentScrollEl = scrollEl.sgGetParentScrollEl()
-        if (parentScrollEl) {
-          this._sgScrollEl = parentScrollEl
-          scrollEl = parentScrollEl
-        }
-      }
       break;
     default:
       break;
@@ -297,4 +418,5 @@ export default function () {
   // 监听滚动的元素
   rootEl.addEventListener('touchstart', touchStartEvent)
   rootEl.addEventListener('touchend', touchEndEvent)
+  rootEl.addEventListener('touchcancel', touchEndEvent)
 }

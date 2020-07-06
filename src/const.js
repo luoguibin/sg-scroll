@@ -11,5 +11,7 @@ export const SG_SCROLL_TYPE = {
   horizontal_stop: 2001,
   horizontal_base: 2002,
   // 双向滚动
-  normal: 3000
+  normal: 3000,
+  normal_stop: 3001,
+  normal_base: 3003
 }
