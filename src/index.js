@@ -242,6 +242,9 @@ const touchMoveEvent = function (e) {
       scrollEl.scrollLeft -= valueX
       break;
     case SG_SCROLL_TYPE.normal:
+      scrollEl.scrollTop -= valueY
+      scrollEl.scrollLeft -= valueX
+      
       if (isScrollCorner(scrollEl)) {
         const parentScrollEl = scrollEl.sgGetParentScrollEl()
         if (parentScrollEl) {
@@ -249,8 +252,6 @@ const touchMoveEvent = function (e) {
           scrollEl = parentScrollEl
         }
       }
-      scrollEl.scrollTop -= valueY
-      scrollEl.scrollLeft -= valueX
       break;
     default:
       break;
