@@ -1,18 +1,5 @@
-/**
- * 类型值递增，stop表示禁止滚动冒泡，比常规值大1，用于优化计算
- */
-const SG_SCROLL_TYPE = {
-  // 纵向滚动
-  vertical: 1000,
-  vertical_stop: 1001,
-  vertical_base: 1002,
-  // 横向滚动
-  horizontal: 2000,
-  horizontal_stop: 2001,
-  horizontal_base: 2002,
-  // 双向滚动
-  normal: 3000
-}
+import { SG_SCROLL_TYPE } from './const'
+import { isScrollTop, isScrollRight, isScrollBottom, isScrollLeft, isScrollCorner } from './util'
 
 /**
  * 获取最近的滚动元素
@@ -46,7 +33,9 @@ const resetScrollType = function (el) {
     // 归并到常规值
     el._sgScrollType -= suffixNum
   }
-
+  if (el._sgIsScrollBase) {
+    el._sgIsScrollChange = false
+  }
 }
 
 /**
@@ -175,37 +164,34 @@ const touchMoveEvent = function (e) {
   touch.valueY = valueY
   this._sgPreviousTouch = touch
 
-  if (scrollEl._sgIsScrollBase) {
+  if (scrollEl._sgIsScrollBase && !scrollEl._sgIsScrollChange) {
     // 检测手势方向
     const isVertical = Math.abs(valueY) > Math.abs(valueX)
     switch (scrollEl._sgScrollType) {
       case SG_SCROLL_TYPE.vertical_base:
         if (isVertical) {
           scrollEl._sgScrollType = SG_SCROLL_TYPE.vertical
-          scrollEl._sgIsScrollStop = true
+          scrollEl._sgIsScrollChange = true
         } else {
           const parentScrollEl = scrollEl.sgGetParentScrollEl()
           if (parentScrollEl) {
             this._sgScrollEl = parentScrollEl
             scrollEl = parentScrollEl
-            scrollEl._sgScrollType = SG_SCROLL_TYPE.horizontal
           }
         }
-        scrollEl._sgIsScrollBase = false
         break;
       case SG_SCROLL_TYPE.horizontal_base:
         if (!isVertical) {
           scrollEl._sgScrollType = SG_SCROLL_TYPE.horizontal
-          scrollEl._sgIsScrollStop = true
+          scrollEl._sgIsScrollChange = true
         } else {
           const parentScrollEl = scrollEl.sgGetParentScrollEl()
           if (parentScrollEl) {
             this._sgScrollEl = parentScrollEl
             scrollEl = parentScrollEl
-            scrollEl._sgScrollType = SG_SCROLL_TYPE.vertical
           }
         }
-        scrollEl._sgIsScrollBase = false
+
         break;
       default:
         break;
@@ -216,7 +202,7 @@ const touchMoveEvent = function (e) {
     case SG_SCROLL_TYPE.vertical:
       if (valueY > 0) {
         // 向下拖动
-        if (scrollEl.scrollTop === 0) {
+        if (isScrollTop(scrollEl)) {
           const parentScrollEl = scrollEl.sgGetParentScrollEl()
           if (parentScrollEl) {
             this._sgScrollEl = parentScrollEl
@@ -225,8 +211,7 @@ const touchMoveEvent = function (e) {
         }
       } else {
         // 向上拖动
-        const height = Math.round(scrollEl.scrollTop + scrollEl.clientHeight)
-        if (height >= scrollEl.scrollHeight) {
+        if (isScrollBottom(scrollEl)) {
           const parentScrollEl = scrollEl.sgGetParentScrollEl()
           if (parentScrollEl) {
             this._sgScrollEl = parentScrollEl
@@ -239,7 +224,7 @@ const touchMoveEvent = function (e) {
     case SG_SCROLL_TYPE.horizontal:
       if (valueX > 0) {
         // 向右拖动
-        if (scrollEl.scrollLeft === 0) {
+        if (isScrollLeft(scrollEl)) {
           const parentScrollEl = scrollEl.sgGetParentScrollEl()
           if (parentScrollEl) {
             this._sgScrollEl = parentScrollEl
@@ -247,8 +232,7 @@ const touchMoveEvent = function (e) {
         }
       } else {
         // 向左拖动
-        const width = Math.round(scrollEl.scrollLeft + scrollEl.clientWidth)
-        if (width >= scrollEl.scrollWidth) {
+        if (isScrollRight(scrollEl)) {
           const parentScrollEl = scrollEl.sgGetParentScrollEl()
           if (parentScrollEl) {
             this._sgScrollEl = parentScrollEl
@@ -258,6 +242,13 @@ const touchMoveEvent = function (e) {
       scrollEl.scrollLeft -= valueX
       break;
     case SG_SCROLL_TYPE.normal:
+      if (isScrollCorner(scrollEl)) {
+        const parentScrollEl = scrollEl.sgGetParentScrollEl()
+        if (parentScrollEl) {
+          this._sgScrollEl = parentScrollEl
+          scrollEl = parentScrollEl
+        }
+      }
       scrollEl.scrollTop -= valueY
       scrollEl.scrollLeft -= valueX
       break;
