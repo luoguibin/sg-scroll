@@ -1,6 +1,6 @@
 {
   "name": "sg-scroll",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "移动端自定义滚动",
   "main": "index.js",
   "scripts": {
