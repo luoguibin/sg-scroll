@@ -55,7 +55,8 @@ const sgScroll = function ({ target }) {
   // 先获取高度后再设置定位
   stickyEl.style.width = stickyEl.clientWidth + "px";
   stickyEl.style.position = "absolute";
-  stickyEl.style.top = paddingTop + scrollTop - nextPadding + "px";
+  // stickyEl.style.top = paddingTop + scrollTop - nextPadding + "px";
+  stickyEl.style.top = paddingTop - nextPadding + "px";
   stickyEl.classList.add("sg-sticking");
   target.sgStickyEl = stickyEl;
 
@@ -84,7 +85,7 @@ export default function () {
     while(scrollEl) {
       if (scrollEl.getAttribute("sg-sticky") === "sg-sticky-item") {
         scrollEl._sgIsStickyInit = true
-        scrollEl.style.position = 'relative'
+        scrollEl.parentElement.style.position = 'relative'
         scrollEl.addEventListener('scroll', sgScroll)
         break
       }
