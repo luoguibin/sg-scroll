@@ -80,13 +80,16 @@ export default function () {
   rootEl._sgIsStickyInit = true
 
   const actionStartEvent = function (e) {
-    const scrollEl = e.target
-    if (scrollEl._sgIsStickyInit || scrollEl.getAttribute("sg-sticky") !== "sg-sticky-item") {
-      return
+    let scrollEl = e.target
+    while(scrollEl) {
+      if (scrollEl.getAttribute("sg-sticky") === "sg-sticky-item") {
+        scrollEl._sgIsStickyInit = true
+        scrollEl.style.position = 'relative'
+        scrollEl.addEventListener('scroll', sgScroll)
+        break
+      }
+      scrollEl = scrollEl.parentElement
     }
-    scrollEl._sgIsStickyInit = true
-    scrollEl.style.position = 'relative'
-    scrollEl.addEventListener('scroll', sgScroll)
   }
   rootEl.addEventListener('touchstart', actionStartEvent)
   rootEl.addEventListener('mousedown', actionStartEvent)
