@@ -33,7 +33,7 @@ sg-scroll可选值：
     base表示根据当前手势方式，判断是否进行当前滚动还是进入父级滚动
 
 sg-sticky：固定值sg-sticky-item，用于收集需要粘滞的滚动元素，所以需要在对应粘滞元素添加sg-sticky-item样式类;
-    同时滚动容器的布局定位自动设置为relative
+    同时滚动容器的父容器布局定位自动设置为relative
 ```
 
 ## [演示地址](https://www.sghen.cn/vue-test/index.html#/demo/sg-scroll-demo "演示地址")
