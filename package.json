@@ -1,6 +1,6 @@
 {
   "name": "sg-scroll",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "移动端自定义滚动",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,9 @@
     "sg-scroll",
     "移动端滚动",
     "禁用默认事件",
-    "滚动冒泡"
+    "滚动冒泡",
+    "粘滞定位",
+    "sg-sticky"
   ],
   "author": "luoguibin",
   "license": "ISC",
