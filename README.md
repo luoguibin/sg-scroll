@@ -9,7 +9,7 @@ npm install sg-scroll
 ```
 import sgScroll from 'sg-scroll'
 sgScroll.sgScrollInit()
-sgScroll.sgSticky()
+sgScroll.sgStickyInit()
 
 <div class="scroll-wrapper" sg-scroll="vertical" sg-sticky="sg-sticky-item">
     <div class="sg-sticky-item">我是sticky元素</div>

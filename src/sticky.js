@@ -84,6 +84,9 @@ export default function () {
     let scrollEl = e.target
     while(scrollEl) {
       if (scrollEl.getAttribute("sg-sticky") === "sg-sticky-item") {
+        if (scrollEl._sgIsStickyInit) {
+          return
+        }
         scrollEl._sgIsStickyInit = true
         scrollEl.parentElement.style.position = 'relative'
         scrollEl.addEventListener('scroll', sgScroll)
