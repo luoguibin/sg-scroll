@@ -377,11 +377,6 @@ const touchMoveEvent = function (e) {
     default:
       break;
   }
-
-  const event = document.createEvent('Event');
-  // 定义事件名称myEvent
-  event.initEvent('sgScroll', true, true);
-  scrollEl.dispatchEvent(event)
 }
 
 /**
