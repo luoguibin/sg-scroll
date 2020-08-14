@@ -1,0 +1,21 @@
+.sg-edge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(78, 124, 194, 0.3);
+  border: 1px solid rgba(70, 131, 180, 0.7);
+  z-index: 99;
+  transition: width 300ms, height 300ms;
+}
+
+.sg-edge-top {
+  top: 0;
+  bottom: initial;
+}
+
+.sg-edge-bottom {
+  top: initial;
+  bottom: 0;
+}
