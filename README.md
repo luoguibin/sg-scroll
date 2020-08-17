@@ -11,7 +11,7 @@ npm install sg-scroll
 import { sgScroll, sgSticky, sgEdge } from 'sg-scroll'
 sgScroll.init() // 可调用sgScroll.release()释放滚动
 sgSticky.init()
-sgEdge.init() // 需要导入目录下的/style/edge.css样式文件
+sgEdge.init({maxHeight: 32}) // 需要导入目录下的/style/edge.css样式文件；默认maxHeight:32
 
 <div class="scroll-wrapper" sg-scroll="vertical" sg-sticky="sg-sticky-item" sg-edge>
     <div class="sg-sticky-item">我是sticky元素</div>

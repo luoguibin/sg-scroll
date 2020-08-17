@@ -1,4 +1,5 @@
 .sg-edge {
+  display: none;
   position: absolute;
   z-index: 99;
   background-color: rgba(78, 124, 194, 0.3);
@@ -10,7 +11,6 @@
   left: 0;
   width: 100%;
   transition: height 300ms, height 300ms;
-  border-radius: 0% 0% 50% 50% / 0 0 100% 100%;
 }
 
 .sg-edge-row {
@@ -21,17 +21,21 @@
 }
 
 .sg-edge-top {
+  display: initial;
   top: 0;
 }
 
 .sg-edge-bottom {
+  display: initial;
   bottom: 0;
 }
 
 .sg-edge-left {
+  display: initial;
   left: 0;
 }
 
 .sg-edge-right {
+  display: initial;
   right: 0;
 }
