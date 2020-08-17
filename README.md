@@ -38,7 +38,10 @@ sg-scroll可选值：
 sg-sticky：固定值sg-sticky-item，用于收集需要粘滞的滚动元素，所以需要在对应粘滞元素添加sg-sticky-item样式类;
     同时滚动容器的父容器布局定位自动设置为relative
 
-sg-edge: 设置的值无效，暂固定为垂直滚动的边缘效果
+sg-edge可选值：
+    vertical
+    horizontal
+    normal
 ```
 
 ## [演示地址](https://www.sghen.cn/vue-test/index.html#/demo/sg-scroll-demo "演示地址")
