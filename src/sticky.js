@@ -74,27 +74,29 @@ const sgScroll = function ({ target }) {
 
 const rootEl = document.body
 
-export default function () {
-  if (rootEl._sgIsStickyInit) {
-    return
-  }
-  rootEl._sgIsStickyInit = true
-
-  const actionStartEvent = function (e) {
-    let scrollEl = e.target
-    while(scrollEl) {
-      if (scrollEl.getAttribute("sg-sticky") === "sg-sticky-item") {
-        if (scrollEl._sgIsStickyInit) {
-          return
-        }
-        scrollEl._sgIsStickyInit = true
-        scrollEl.parentElement.style.position = 'relative'
-        scrollEl.addEventListener('scroll', sgScroll)
-        break
-      }
-      scrollEl = scrollEl.parentElement
+export default {
+  init: function () {
+    if (rootEl._sgIsStickyInit) {
+      return
     }
+    rootEl._sgIsStickyInit = true
+  
+    const actionStartEvent = function (e) {
+      let scrollEl = e.target
+      while(scrollEl) {
+        if (scrollEl.getAttribute("sg-sticky") === "sg-sticky-item") {
+          if (scrollEl._sgIsStickyInit) {
+            return
+          }
+          scrollEl._sgIsStickyInit = true
+          scrollEl.parentElement.style.position = 'relative'
+          scrollEl.addEventListener('scroll', sgScroll)
+          break
+        }
+        scrollEl = scrollEl.parentElement
+      }
+    }
+    rootEl.addEventListener('touchstart', actionStartEvent)
+    rootEl.addEventListener('mousedown', actionStartEvent)
   }
-  rootEl.addEventListener('touchstart', actionStartEvent)
-  rootEl.addEventListener('mousedown', actionStartEvent)
 }

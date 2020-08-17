@@ -122,29 +122,31 @@ const EDGE_TYPE = {
   normal: 3
 }
 
-export default function () {
-  if (rootEl._sgIsEdgeInit) {
-    return
-  }
-  rootEl._sgIsEdgeInit = true
-
-  const actionStartEvent = function (e) {
-    let scrollEl = e.target
-    while(scrollEl) {
-      if (scrollEl.hasAttribute("sg-edge")) {
-        const edgeType = EDGE_TYPE[scrollEl.getAttribute("sg-edge")] || EDGE_TYPE.vertical
-        scrollEl.sgEdgeType = edgeType
-        if (scrollEl._sgIsEdgeInit) {
-          return
-        }
-        scrollEl._sgIsEdgeInit = true
-        handleTouchStart.bind(scrollEl)(e)
-        scrollEl.addEventListener('touchstart', handleTouchStart)
-        scrollEl.addEventListener('touchend', handleTouchEnd)
-        break
-      }
-      scrollEl = scrollEl.parentElement
+export default {
+  init: function () {
+    if (rootEl._sgIsEdgeInit) {
+      return
     }
+    rootEl._sgIsEdgeInit = true
+  
+    const actionStartEvent = function (e) {
+      let scrollEl = e.target
+      while(scrollEl) {
+        if (scrollEl.hasAttribute("sg-edge")) {
+          const edgeType = EDGE_TYPE[scrollEl.getAttribute("sg-edge")] || EDGE_TYPE.vertical
+          scrollEl.sgEdgeType = edgeType
+          if (scrollEl._sgIsEdgeInit) {
+            return
+          }
+          scrollEl._sgIsEdgeInit = true
+          handleTouchStart.bind(scrollEl)(e)
+          scrollEl.addEventListener('touchstart', handleTouchStart)
+          scrollEl.addEventListener('touchend', handleTouchEnd)
+          break
+        }
+        scrollEl = scrollEl.parentElement
+      }
+    }
+    rootEl.addEventListener('touchstart', actionStartEvent)
   }
-  rootEl.addEventListener('touchstart', actionStartEvent)
 }

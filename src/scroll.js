@@ -61,8 +61,8 @@ const initScroll = function (el) {
   el.sgStartAnimeScroll = function (valueX, valueY) {
     this._sgAnimeUnit = { valueX, valueY }
 
-    const xCount = Math.ceil(Math.abs(valueX) / 1)
-    const yCount = Math.ceil(Math.abs(valueY) / 1)
+    const xCount = Math.ceil(Math.abs(valueX) / 0.8)
+    const yCount = Math.ceil(Math.abs(valueY) / 0.8)
     switch (this._sgScrollType) {
       case SG_SCROLL_TYPE.vertical:
         this._sgAnimeCount = yCount
@@ -392,26 +392,51 @@ const touchEndEvent = function () {
   rootEl.removeEventListener('touchmove', touchMoveEvent)
 }
 
-/**
- * @description 全局初始化自定义滚动事件
- */
-export default function () {
-  if (rootEl._sgIsScrollInit) {
-    return
-  }
-  rootEl._sgIsScrollInit = true
-  // 阻止浏览器所有默认操作
-  rootEl.addEventListener(
-    'touchmove',
-    function (e) {
-      e.preventDefault()
-      return false
-    },
-    { passive: false }
-  )
+const rootTouchMoveEvent = function (e) {
+  e.preventDefault()
+  return false
+}
 
-  // 监听滚动的元素
-  rootEl.addEventListener('touchstart', touchStartEvent)
-  rootEl.addEventListener('touchend', touchEndEvent)
-  rootEl.addEventListener('touchcancel', touchEndEvent)
+export default {
+  /**
+   * @description 全局初始化自定义滚动事件
+   */
+  init: function () {
+    if (rootEl._sgIsScrollInit) {
+      return
+    }
+    rootEl._sgIsScrollInit = true
+    // 阻止浏览器所有默认操作
+    rootEl.addEventListener(
+      'touchmove',
+      rootTouchMoveEvent,
+      { passive: false }
+    )
+  
+    // 监听滚动的元素
+    rootEl.addEventListener('touchstart', touchStartEvent)
+    rootEl.addEventListener('touchend', touchEndEvent)
+    rootEl.addEventListener('touchcancel', touchEndEvent)
+  },
+
+  /**
+   * 移除滚动
+   */
+  release: function() {
+    if (!rootEl._sgIsScrollInit) {
+      return
+    }
+
+    rootEl.removeEventListener(
+      'touchmove',
+      rootTouchMoveEvent,
+      { passive: false }
+    )
+
+    // 移除滚动的元素监听
+    rootEl.removeEventListener('touchstart', touchStartEvent)
+    rootEl.removeEventListener('touchend', touchEndEvent)
+    rootEl.removeEventListener('touchcancel', touchEndEvent)
+    rootEl._sgIsScrollInit = false
+  }
 }

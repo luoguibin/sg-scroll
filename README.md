@@ -8,10 +8,10 @@
 npm install sg-scroll
 
 ```
-import sgScroll from 'sg-scroll'
-sgScroll.sgScrollInit()
-sgScroll.sgStickyInit()
-sgScroll.sgEdgeInit() // 需要导入目录下的/style/edge.css样式文件
+import { sgScroll, sgSticky, sgEdge } from 'sg-scroll'
+sgScroll.init() // 可调用sgScroll.release()释放滚动
+sgSticky.init()
+sgEdge.init() // 需要导入目录下的/style/edge.css样式文件
 
 <div class="scroll-wrapper" sg-scroll="vertical" sg-sticky="sg-sticky-item" sg-edge>
     <div class="sg-sticky-item">我是sticky元素</div>
@@ -42,6 +42,8 @@ sg-edge可选值：
     vertical
     horizontal
     normal
+
+    其父容器布局定位自动设置为relative
 ```
 
 ## [演示地址](https://www.sghen.cn/vue-test/index.html#/demo/sg-scroll-demo "演示地址")

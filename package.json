@@ -1,19 +1,20 @@
 {
   "name": "sg-scroll",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "移动端自定义滚动",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "sg-scroll",
+    "scroll",
     "移动端滚动",
     "禁用默认事件",
     "滚动冒泡",
-    "sg-sticky",
+    "sticky",
     "粘滞定位",
-    "sg-edge",
+    "edge",
+    "edge-effect",
     "边缘效果"
   ],
   "author": "luoguibin",
